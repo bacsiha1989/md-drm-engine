@@ -12,8 +12,11 @@ import sys
 import json
 import time
 import uuid
+import re
 import shutil
+import unicodedata
 import urllib.request
+import urllib.parse
 from pathlib import Path
 from http import HTTPStatus
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -99,7 +102,28 @@ BOOKS_REGISTRY = {
     }
 }
 
+TOKENS_FILE = STAMPED_DIR / "tokens.json"
 DOWNLOAD_TOKENS = {}
+
+def _load_tokens():
+    global DOWNLOAD_TOKENS
+    if TOKENS_FILE.exists():
+        try:
+            with open(TOKENS_FILE, "r", encoding="utf-8") as f:
+                saved = json.load(f)
+                DOWNLOAD_TOKENS.update(saved)
+        except Exception:
+            pass
+    return DOWNLOAD_TOKENS
+
+def _save_token(token_id: str, data: dict):
+    tokens = _load_tokens()
+    tokens[token_id] = data
+    try:
+        with open(TOKENS_FILE, "w", encoding="utf-8") as f:
+            json.dump(tokens, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
 
 
 def _ensure_book_in_cache(r2_key: str) -> Path:
@@ -147,6 +171,9 @@ class DRMRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def do_HEAD(self):
+        self.do_GET()
+
     def do_OPTIONS(self):
         self.send_response(HTTPStatus.NO_CONTENT)
         self._send_cors_headers()
@@ -187,8 +214,9 @@ class DRMRequestHandler(BaseHTTPRequestHandler):
 
         if path.startswith("/api/drm/download/"):
             token = path.split("/api/drm/download/")[-1].strip("/")
-            item = DOWNLOAD_TOKENS.get(token)
-            if not item or item["exp"] < time.time():
+            tokens = _load_tokens()
+            item = tokens.get(token)
+            if not item or item.get("exp", 0) < time.time():
                 self._json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Đường link tải sách đã hết hạn hoặc không tồn tại (hiệu lực 24 giờ)."})
                 return
 
@@ -199,10 +227,14 @@ class DRMRequestHandler(BaseHTTPRequestHandler):
 
             file_size = file_path.stat().st_size
             filename = item["filename"]
+            norm_name = unicodedata.normalize("NFKD", filename).encode("ascii", "ignore").decode("ascii")
+            ascii_filename = re.sub(r'[^a-zA-Z0-9_\-\.]', '_', norm_name)
+            encoded_filename = urllib.parse.quote(filename, encoding='utf-8')
+
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", "application/pdf")
             self.send_header("Content-Length", str(file_size))
-            self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+            self.send_header("Content-Disposition", f'attachment; filename="{ascii_filename}"; filename*=UTF-8\'\'{encoded_filename}')
             self.send_header("Cache-Control", "private, max-age=3600")
             self._send_cors_headers()
             self.end_headers()
@@ -217,7 +249,7 @@ class DRMRequestHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
 
-        if path == "/api/drm/stamp":
+        if path in ("/api/drm/stamp", "/api/drm/generate-stamped-link"):
             content_len = int(self.headers.get("Content-Length", 0))
             if content_len == 0:
                 self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "Thiếu dữ liệu JSON trong body."})
@@ -276,11 +308,12 @@ class DRMRequestHandler(BaseHTTPRequestHandler):
             dt = time.time() - t0
             token = uuid.uuid4().hex
             out_file = Path(stamp_res["output_path"])
-            DOWNLOAD_TOKENS[token] = {
+            token_data = {
                 "path": str(out_file),
                 "filename": out_file.name,
                 "exp": time.time() + 86400  # 24 giờ
             }
+            _save_token(token, token_data)
 
             self._json(HTTPStatus.OK, {
                 "ok": True,
