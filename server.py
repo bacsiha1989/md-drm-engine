@@ -103,7 +103,37 @@ BOOKS_REGISTRY = {
 }
 
 TOKENS_FILE = STAMPED_DIR / "tokens.json"
+MEMBERS_FILE = BASE_DIR / "members.json"
+PORTAL_HTML_FILE = BASE_DIR / "portal.html"
 DOWNLOAD_TOKENS = {}
+
+ID_TO_BOOK_KEY = {
+    "1127814624c0": "08_gabbe",
+    "08_gabbe": "08_gabbe",
+    "a8e0a1ad9e6b": "01_tim_thai",
+    "01_tim_thai": "01_tim_thai",
+    "0d4e494f71d9": "02_timor_nao",
+    "02_timor_nao": "02_timor_nao",
+    "2af32d7a3916": "03_di_tat_quy_1",
+    "03_di_tat_quy_1": "03_di_tat_quy_1",
+    "e84eef8180ca": "04_san_khoa_williams",
+    "04_san_khoa_williams": "04_san_khoa_williams",
+    "e22a7b0b60b7": "05_phu_khoa_williams",
+    "05_phu_khoa_williams": "05_phu_khoa_williams",
+    "8c866ea0330c": "06_noi_soi_buong_tc",
+    "06_noi_soi_buong_tc": "06_noi_soi_buong_tc",
+    "ccafa7f347dd": "07_phoi_thai_langman",
+    "07_phoi_thai_langman": "07_phoi_thai_langman"
+}
+
+def _load_members():
+    if MEMBERS_FILE.exists():
+        try:
+            with open(MEMBERS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
 
 def _load_tokens():
     global DOWNLOAD_TOKENS
@@ -183,7 +213,18 @@ class DRMRequestHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
 
-        if path in ("/", "/health"):
+        if path in ("/", "/portal"):
+            if PORTAL_HTML_FILE.exists():
+                content = PORTAL_HTML_FILE.read_bytes()
+                self.send_response(HTTPStatus.OK)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(content)))
+                self._send_cors_headers()
+                self.end_headers()
+                self.wfile.write(content)
+                return
+
+        if path == "/health":
             self._json(HTTPStatus.OK, {
                 "status": "healthy",
                 "service": "md-drm-engine",
@@ -191,6 +232,64 @@ class DRMRequestHandler(BaseHTTPRequestHandler):
                 "r2_url": R2_PUBLIC_BASE,
                 "books_total": len(BOOKS_REGISTRY),
                 "cached_books": [p.name for p in CACHE_DIR.glob("*.pdf")]
+            })
+            return
+
+        if path == "/api/portal/verify":
+            query = parse_qs(parsed.query)
+            email = query.get("email", [""])[0].strip().lower()
+            if not email:
+                self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "Vui lòng nhập địa chỉ Email."})
+                return
+
+            members = _load_members()
+            mem = members.get(email)
+            if not mem:
+                self._json(HTTPStatus.NOT_FOUND, {
+                    "ok": False,
+                    "error": f"Email '{email}' chưa được cấp phép nhận sách. Vui lòng liên hệ Bác sĩ / MomDiary."
+                })
+                return
+
+            allocated = []
+            if mem.get("is_full_8"):
+                for k, v in BOOKS_REGISTRY.items():
+                    allocated.append({
+                        "id": k,
+                        "title": v["title"],
+                        "authors": v["authors"],
+                        "edition": v["edition"],
+                        "size_mb": v["size_mb"]
+                    })
+            else:
+                user_bids = set()
+                for raw_bid in mem.get("allocated_books", []):
+                    clean_bid = ID_TO_BOOK_KEY.get(raw_bid, raw_bid)
+                    user_bids.add(clean_bid)
+
+                for k, v in BOOKS_REGISTRY.items():
+                    if k in user_bids:
+                        allocated.append({
+                            "id": k,
+                            "title": v["title"],
+                            "authors": v["authors"],
+                            "edition": v["edition"],
+                            "size_mb": v["size_mb"]
+                        })
+
+            if not allocated:
+                self._json(HTTPStatus.NOT_FOUND, {
+                    "ok": False,
+                    "error": f"Tài khoản '{email}' hiện chưa được gán cuốn sách nào."
+                })
+                return
+
+            self._json(HTTPStatus.OK, {
+                "ok": True,
+                "email": email,
+                "name": mem.get("name") or email.split("@")[0],
+                "phone": mem.get("phone") or "",
+                "books": allocated
             })
             return
 
