@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: md-drm-engine
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 server.py
+    healthCheckPath: /health
+    envVars:
+      - key: CLOUDFLARE_R2_PUBLIC_URL
+        value: https://pub-f21768510e724dd19c9608dbb50e43c1.r2.dev
+      - key: DRM_SECRET_SALT
+        value: MINH_TRANSLATE_MED_DRM_SECURE_SALT_2026
