@@ -796,7 +796,7 @@
             </label>
             <input type="email" id="input-email" class="form-input" placeholder="Ví dụ: ledat1269bn@gmail.com" required autocomplete="email" />
             <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
-              * Nhập Gmail để hệ thống xác lập bản quyền cá nhân hóa trọn bộ 8 cuốn sách chuyên khảo.
+              * Nhập Gmail để hệ thống xác lập bản quyền cá nhân hóa các cuốn sách chuyên khảo được cấp phép.
             </div>
           </div>
 
@@ -810,13 +810,13 @@
             </label>
             <input type="tel" id="input-phone" class="form-input" placeholder="Ví dụ: 0985 651 775 hoặc 0358 959 793" required autocomplete="tel" />
             <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">
-              * Số điện thoại đang sử dụng ứng dụng Telegram để nhận toàn bộ 8 file sách PDF nguyên bản.
+              * Số điện thoại đang sử dụng ứng dụng Telegram để nhận file sách PDF nguyên bản.
             </div>
           </div>
 
           <button type="button" id="btn-submit-registration" class="btn-primary btn-tele" style="margin-top: 14px; width: 100%; font-size: 16px; padding: 16px;">
             <span>🚀</span>
-            <span id="btn-submit-registration-text">XÁC NHẬN &amp; NHẬN TRỌN BỘ 8 QUYỂN SÁCH NGAY ➔</span>
+            <span id="btn-submit-registration-text">XÁC NHẬN &amp; TRA CỨU DANH MỤC SÁCH ĐƯỢC CẤP PHÉP ➔</span>
           </button>
 
           <div id="step1-error" class="alert-box alert-error" hidden style="margin-top: 8px;"></div>
@@ -1056,7 +1056,7 @@
         }
 
         btnSubmitReg.disabled = true;
-        btnSubmitRegText.innerHTML = '<span class="spinner"></span> Đang kích hoạt trọn bộ 8 cuốn sách...';
+        btnSubmitRegText.innerHTML = '<span class="spinner"></span> Đang xác thực thông tin cấp phép...';
 
         try {
           const resp = await fetch("/api/portal/magic-login", {
@@ -1082,7 +1082,7 @@
               books: userBooksList
             }));
 
-            // Chuyển thẳng sang Bước 2 xem danh mục 8 cuốn sách!
+            // Chuyển thẳng sang Bước 2 xem danh mục sách được cấp phép
             renderStep2Showcase();
             switchToStep(2);
           } else {
@@ -1094,7 +1094,7 @@
           step1Error.hidden = false;
         } finally {
           btnSubmitReg.disabled = false;
-          btnSubmitRegText.textContent = "XÁC NHẬN & NHẬN TRỌN BỘ 8 QUYỂN SÁCH NGAY ➔";
+          btnSubmitRegText.textContent = "XÁC NHẬN & TRA CỨU DANH MỤC SÁCH ĐƯỢC CẤP PHÉP ➔";
         }
       }
 
@@ -1250,11 +1250,24 @@
         const card = document.getElementById(`pipeline-card-${book.book_id}`);
         const actionsBox = document.getElementById(`actions-${book.book_id}`);
 
+        if (book.telegram_sent || (book.download_url && !book.is_pending)) {
+          if (card) card.className = "pipeline-card done";
+          if (actionsBox) {
+            actionsBox.innerHTML = `
+              <div class="status-badge status-completed" id="badge-status-${book.book_id}">
+                <span>✅</span> <span>Đã gửi vào Telegram (${book.size_mb || ""} MB) ✓</span>
+              </div>
+              ${book.download_url ? `<a href="${book.download_url}" download class="btn-download-direct" style="padding:6px 14px; font-size:12px; background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.2);">📥 Tải lưu về máy</a>` : ""}
+            `;
+          }
+          return true;
+        }
+
         if (card) card.className = "pipeline-card active";
         if (actionsBox) {
           actionsBox.innerHTML = `
             <div class="status-badge status-processing" id="badge-status-${book.book_id}">
-              <span class="spinner"></span> <span>Đang đóng dấu 5 tầng DRM...</span>
+              <span class="spinner"></span> <span>Đang xử lý tài liệu...</span>
             </div>
           `;
         }

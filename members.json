@@ -86,7 +86,7 @@
   },
   "tuyenbtm97@gmail.com": {
     "name": "tuyenbtm97",
-    "phone": "",
+    "phone": "0969853267",
     "is_full_8": true,
     "allocated_books": [
       "a8e0a1ad9e6b",
@@ -98,7 +98,9 @@
       "ccafa7f347dd",
       "1127814624c0"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
   },
   "phihip321@gmail.com": {
     "name": "phihip321",
@@ -153,14 +155,20 @@
   },
   "lelangvv@gmail.com": {
     "name": "LelanGVV",
-    "phone": "",
-    "is_full_8": false,
+    "phone": "+84912846457",
+    "is_full_8": true,
     "allocated_books": [
+      "a8e0a1ad9e6b",
       "0d4e494f71d9",
+      "2af32d7a3916",
       "e84eef8180ca",
-      "a8e0a1ad9e6b"
+      "e22a7b0b60b7",
+      "8c866ea0330c",
+      "ccafa7f347dd",
+      "1127814624c0"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true
   },
   "bsthangphuong@gmail.com": {
     "name": "bsthangphuong",
@@ -191,7 +199,7 @@
   },
   "nguyencongluan2991@gmail.com": {
     "name": "nguyencongluan2991",
-    "phone": "",
+    "phone": "0962924791",
     "is_full_8": false,
     "allocated_books": [
       "0d4e494f71d9",
@@ -199,7 +207,9 @@
       "e84eef8180ca",
       "a8e0a1ad9e6b"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
   },
   "nguyentrikhang95@gmail.com": {
     "name": "nguyentrikhang95",
@@ -271,7 +281,7 @@
   },
   "thuhoa141189@gmail.com": {
     "name": "thuhoa141189",
-    "phone": "",
+    "phone": "0358959793",
     "is_full_8": false,
     "allocated_books": [
       "0d4e494f71d9",
@@ -279,7 +289,8 @@
       "e84eef8180ca",
       "a8e0a1ad9e6b"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true
   },
   "hongthuy.k31yhp@gmail.com": {
     "name": "hongthuy.k31yhp",
@@ -312,7 +323,7 @@
   },
   "thuydtt071199@gmail.com": {
     "name": "thuydtt071199",
-    "phone": "",
+    "phone": "0969716913",
     "is_full_8": true,
     "allocated_books": [
       "a8e0a1ad9e6b",
@@ -324,7 +335,9 @@
       "ccafa7f347dd",
       "1127814624c0"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
   },
   "nguyenthanhhuong220199@gmail.com": {
     "name": "nguyenthanhhuong220199",
@@ -386,13 +399,15 @@
   },
   "ledat1269bn@gmail.com": {
     "name": "ledat1269bn",
-    "phone": "",
+    "phone": "0985651775",
     "is_full_8": false,
     "allocated_books": [
       "0d4e494f71d9",
       "a8e0a1ad9e6b"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
   },
   "giosaigonh4@gmail.com": {
     "name": "giosaigonh4",
@@ -551,12 +566,14 @@
   },
   "haclinhldb@gmail.com": {
     "name": "haclinhldb",
-    "phone": "",
+    "phone": "0919027706",
     "is_full_8": false,
     "allocated_books": [
       "a8e0a1ad9e6b"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
   },
   "nguyenlevu3000qn@gmail.com": {
     "name": "nguyenlevu3000qn",
@@ -686,14 +703,16 @@
   },
   "nhatsan95@gmail.com": {
     "name": "nhatsan95",
-    "phone": "",
+    "phone": "0969716912",
     "is_full_8": false,
     "allocated_books": [
       "0d4e494f71d9",
       "e84eef8180ca",
       "a8e0a1ad9e6b"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
   },
   "khaitran25499@gmail.com": {
     "name": "khaitran25499",
@@ -870,12 +889,14 @@
   },
   "drvqnhan@gmail.com": {
     "name": "drvqnhan",
-    "phone": "",
+    "phone": "+84865302290",
     "is_full_8": false,
     "allocated_books": [
-      "0d4e494f71d9"
+      "0d4e494f71d9",
+      "2af32d7a3916"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true
   },
   "hoanglanyk2008@gmail.com": {
     "name": "hoanglanyk2008",
@@ -906,12 +927,14 @@
   },
   "dr.fiore2312@gmail.com": {
     "name": "dr.fiore2312",
-    "phone": "",
+    "phone": "+84797887502",
     "is_full_8": false,
     "allocated_books": [
-      "0d4e494f71d9"
+      "0d4e494f71d9",
+      "2af32d7a3916"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true
   },
   "drtonghiepcdha@gmail.com": {
     "name": "drtonghiepcdha",
@@ -1196,12 +1219,14 @@
   },
   "phuongthaobackan2406@gmail.com": {
     "name": "phuongthaobackan2406",
-    "phone": "",
+    "phone": "0342932200",
     "is_full_8": false,
     "allocated_books": [
       "e84eef8180ca"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
   },
   "hadhydtb19@gmail.com": {
     "name": "hadhydtb19",
@@ -1374,13 +1399,15 @@
   },
   "kimthuhue3979@gmail.com": {
     "name": "kimthuhue3979",
-    "phone": "",
+    "phone": "0976358300",
     "is_full_8": false,
     "allocated_books": [
       "e22a7b0b60b7",
       "e84eef8180ca"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
   },
   "luong25081998@gmail.com": {
     "name": "luong25081998",
@@ -1453,13 +1480,15 @@
   },
   "duonghuy148@gmail.com": {
     "name": "duonghuy148",
-    "phone": "",
+    "phone": "0987160360",
     "is_full_8": false,
     "allocated_books": [
       "e22a7b0b60b7",
       "e84eef8180ca"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
   },
   "vquanghuy288@gmail.com": {
     "name": "vquanghuy288",
@@ -1512,13 +1541,15 @@
   },
   "phamminhhuyen142@gmail.com": {
     "name": "phamminhhuyen142",
-    "phone": "",
+    "phone": "0357118707",
     "is_full_8": false,
     "allocated_books": [
       "e22a7b0b60b7",
       "e84eef8180ca"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
   },
   "lqtc2001@gmail.com": {
     "name": "lqtc2001",
@@ -1943,13 +1974,15 @@
   },
   "dr.letramanh@gmail.com": {
     "name": "dr.letramanh",
-    "phone": "",
+    "phone": "0974776771",
     "is_full_8": false,
     "allocated_books": [
       "e22a7b0b60b7",
       "e84eef8180ca"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
   },
   "ntlinh.mc@gmail.com": {
     "name": "ntlinh.mc",
@@ -2052,7 +2085,7 @@
   },
   "tb.hongchuyenvu@gmail.com": {
     "name": "tb.hongchuyenvu",
-    "phone": "",
+    "phone": "+84962685398",
     "is_full_8": true,
     "allocated_books": [
       "a8e0a1ad9e6b",
@@ -2064,7 +2097,8 @@
       "ccafa7f347dd",
       "1127814624c0"
     ],
-    "status": "active"
+    "status": "active",
+    "telegram_verified": true
   },
   "pvtrieu.hd@gmail.com": {
     "name": "pvtrieu.hd",
@@ -2212,10 +2246,93 @@
   },
   "bacsiphamngocha@gmail.com": {
     "name": "BS. Phạm Ngọc Hà",
-    "phone": "0988888888",
+    "phone": "0971521618",
     "is_full_8": false,
     "allocated_books": [
       "08_gabbe",
+      "1127814624c0"
+    ],
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
+  },
+  "quyet.hmu@gmail.com": {
+    "name": "BS. Quyết HMU",
+    "phone": "0971521618",
+    "is_full_8": true,
+    "allocated_books": [
+      "all"
+    ],
+    "status": "active",
+    "telegram_verified": true,
+    "verified_at": "2026-10-08 23:58:24"
+  },
+  "dohan141@gmail.com": {
+    "name": "BS Đỗ Hân",
+    "phone": "0963703510",
+    "is_full_8": false,
+    "allocated_books": [
+      "a8e0a1ad9e6b"
+    ],
+    "status": "active",
+    "telegram_verified": true,
+    "dispatched_books": {
+      "01_tim_thai": {
+        "book_title": "Siêu Âm Tim Thai (Fetal Echocardiography 4e)",
+        "dispatched_at": "2026-10-09 13:33:58",
+        "telegram_sent": true
+      }
+    }
+  },
+  "huuhoaihmu0915@gmail.com": {
+    "name": "BS Hữu Hoài",
+    "phone": "0588555525",
+    "is_full_8": false,
+    "allocated_books": [
+      "01_tim_thai",
+      "05_phu_khoa_williams",
+      "06_noi_soi_buong_tc"
+    ],
+    "status": "active",
+    "telegram_verified": false,
+    "registered_at": "2026-10-09 14:15:00",
+    "dispatched_books": {}
+  },
+  "nangntna1k4@gmail.com": {
+    "name": "Bác sĩ Nangntna",
+    "phone": "",
+    "is_full_8": true,
+    "allocated_books": [
+      "a8e0a1ad9e6b",
+      "0d4e494f71d9",
+      "2af32d7a3916",
+      "e84eef8180ca",
+      "e22a7b0b60b7",
+      "8c866ea0330c",
+      "ccafa7f347dd",
+      "1127814624c0"
+    ],
+    "status": "active"
+  },
+  "uyentran150695@gmail.com": {
+    "name": "BS Uyên Trần",
+    "phone": "+84355248481",
+    "telegram_verified": true,
+    "is_full_8": false,
+    "allocated_books": [
+      "e84eef8180ca",
+      "e22a7b0b60b7",
+      "1127814624c0"
+    ],
+    "status": "active"
+  },
+  "hgcuong82@gmail.com": {
+    "name": "BS Cường",
+    "phone": "+84833805166",
+    "telegram_verified": true,
+    "is_full_8": false,
+    "allocated_books": [
+      "a8e0a1ad9e6b",
       "1127814624c0"
     ],
     "status": "active"

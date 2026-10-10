@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#070A12" />
+    <title>Hệ Thống Quản Trị Member &amp; Truy Vết Bản Quyền Forensic DRM</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg-dark: #070A12;
+        --card-bg: rgba(15, 23, 42, 0.88);
+        --accent-cyan: #06B6D4;
+        --accent-emerald: #10B981;
+        --accent-amber: #F59E0B;
+        --accent-rose: #F43F5E;
+        --accent-purple: #A855F7;
+        --text-main: #F8FAFC;
+        --text-dim: #94A3B8;
+        --border-glass: rgba(255, 255, 255, 0.1);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background-color: var(--bg-dark);
+        background-image: 
+          radial-gradient(at 10% 10%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
+          radial-gradient(at 90% 90%, rgba(244, 63, 94, 0.1) 0px, transparent 50%),
+          linear-gradient(180deg, #070A12 0%, #0F172A 100%);
+        color: var(--text-main);
+        font-family: 'Inter', -apple-system, sans-serif;
+        min-height: 100vh;
+        padding: 24px 20px 80px;
+      }
+      .admin-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      /* Header */
+      .admin-header {
+        background: var(--card-bg);
+        border: 1px solid var(--border-glass);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border-radius: 20px;
+        padding: 24px 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+      }
+      .header-title-box {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .header-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #F43F5E, #A855F7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 0 20px rgba(244, 63, 94, 0.35);
+      }
+      .header-h1 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 22px;
+        font-weight: 800;
+        color: #FFF;
+      }
+      .header-desc {
+        font-size: 13px;
+        color: var(--text-dim);
+        margin-top: 2px;
+      }
+      .header-actions {
+        display: flex;
+        gap: 10px;
+      }
+      .btn {
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+        text-decoration: none;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #06B6D4, #2563EB);
+        color: #FFF;
+        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.45);
+      }
+      .btn-rose {
+        background: linear-gradient(135deg, #F43F5E, #BE123C);
+        color: #FFF;
+        box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3);
+      }
+      .btn-ghost {
+        background: rgba(255, 255, 255, 0.06);
+        color: #CBD5E1;
+        border: 1px solid var(--border-glass);
+      }
+      .btn-ghost:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: #FFF;
+      }
+
+      /* Stats Row */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+      }
+      .stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-glass);
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        backdrop-filter: blur(20px);
+      }
+      .stat-label {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text-dim);
+      }
+      .stat-value {
+        font-family: 'Outfit', sans-serif;
+        font-size: 28px;
+        font-weight: 800;
+        color: #FFF;
+      }
+
+      /* Forensic Anti-Leak Tool */
+      .forensic-panel {
+        background: linear-gradient(135deg, rgba(244, 63, 94, 0.08), rgba(168, 85, 247, 0.06));
+        border: 1.5px solid rgba(244, 63, 94, 0.35);
+        border-radius: 20px;
+        padding: 28px 32px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(244, 63, 94, 0.1);
+      }
+      .forensic-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 18px;
+        font-weight: 800;
+        color: #FDA4AF;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+      .search-box-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+      .search-input {
+        flex: 1;
+        min-width: 280px;
+        background: #060911;
+        border: 1px solid rgba(244, 63, 94, 0.4);
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 14.5px;
+        color: #FFF;
+        outline: none;
+        transition: all 0.2s;
+      }
+      .search-input:focus {
+        border-color: #F43F5E;
+        box-shadow: 0 0 20px rgba(244, 63, 94, 0.35);
+      }
+
+      /* Forensic Results */
+      .forensic-results {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .result-culprit-card {
+        background: rgba(0, 0, 0, 0.5);
+        border: 1.5px solid #F43F5E;
+        border-radius: 14px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        animation: pulseResult 0.4s ease;
+      }
+      @keyframes pulseResult {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .culprit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .culprit-name {
+        font-size: 17px;
+        font-weight: 800;
+        color: #FFF;
+      }
+      .culprit-match-reasons {
+        background: rgba(244, 63, 94, 0.15);
+        border-left: 3px solid #F43F5E;
+        padding: 8px 12px;
+        border-radius: 0 8px 8px 0;
+        font-size: 13px;
+        color: #FECDD3;
+        line-height: 1.5;
+      }
+
+      /* Batch Full-8 Box */
+      .batch-box {
+        background: var(--card-bg);
+        border: 1px solid var(--border-glass);
+        border-radius: 20px;
+        padding: 26px 30px;
+      }
+      .batch-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: #FFF;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .batch-textarea {
+        width: 100%;
+        height: 100px;
+        background: #090E1A;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 12px;
+        padding: 12px 16px;
+        color: #FFF;
+        font-size: 13.5px;
+        font-family: monospace;
+        resize: vertical;
+        outline: none;
+        margin-top: 10px;
+      }
+      .batch-textarea:focus {
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
+      }
+
+      /* Members Table */
+      .table-container {
+        background: var(--card-bg);
+        border: 1px solid var(--border-glass);
+        border-radius: 20px;
+        overflow: hidden;
+      }
+      .table-header-bar {
+        padding: 20px 26px;
+        border-bottom: 1px solid var(--border-glass);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .table-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: #FFF;
+      }
+      .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 13.5px;
+      }
+      .custom-table th {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 14px 18px;
+        font-weight: 700;
+        color: var(--text-dim);
+        border-bottom: 1px solid var(--border-glass);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .custom-table td {
+        padding: 16px 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: #E2E8F0;
+        vertical-align: middle;
+      }
+      .custom-table tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      /* Badges */
+      .badge-f8 {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2));
+        border: 1px solid rgba(245, 158, 11, 0.5);
+        color: #FBBF24;
+        font-weight: 800;
+        font-size: 11px;
+        padding: 4px 9px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .badge-tele {
+        background: rgba(6, 182, 212, 0.15);
+        border: 1px solid rgba(6, 182, 212, 0.4);
+        color: #38BDF8;
+        font-weight: 700;
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 6px;
+      }
+      .badge-banned {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.5);
+        color: #F87171;
+        font-weight: 700;
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 6px;
+      }
+
+      /* Modal Details */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 1000;
+      }
+      .modal-overlay[hidden] {
+        display: none !important;
+      }
+      .modal-card {
+        background: #0F172A;
+        border: 1px solid var(--border-glass);
+        border-radius: 20px;
+        width: 100%;
+        max-width: 680px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: #FFF;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        display: inline-block;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <div class="admin-container">
+      <!-- HEADER -->
+      <header class="admin-header">
+        <div class="header-title-box">
+          <div class="header-icon">🛡️</div>
+          <div>
+            <h1 class="header-h1">Hồ Sơ Hội Viên &amp; Truy Vết Bản Quyền Forensic DRM</h1>
+            <p class="header-desc">Hệ thống đối soát Gmail, Số điện thoại Telegram và truy tìm thủ phạm leak sách</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn btn-rose" id="btn-batch-gift-telegram">
+            <span>🎁</span> Tặng Sách Toàn Bộ BS Đã Có SĐT
+          </button>
+          <a href="/portal" class="btn btn-ghost" target="_blank">🌐 Xem Cổng Tải Sách</a>
+          <button type="button" class="btn btn-primary" id="btn-refresh-data">↻ Làm Mới Dữ Liệu</button>
+        </div>
+      </header>
+
+      <!-- STATS COUNTERS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">👥 Tổng Số Hội Viên (Gmail)</span>
+          <span class="stat-value" id="st-total">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">📱 Đã Xác Thực Telegram</span>
+          <span class="stat-value" id="st-tele" style="color: #38BDF8;">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">🌟 Đã Cấp Full 8 Quyển</span>
+          <span class="stat-value" id="st-f8" style="color: #FBBF24;">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">📦 Lượt File Đã Chuyển Giao</span>
+          <span class="stat-value" id="st-dispatched" style="color: #34D399;">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">🚫 Đối Tượng Đã Chặn (Ban)</span>
+          <span class="stat-value" id="st-banned" style="color: #F87171;">0</span>
+        </div>
+      </div>
+
+      <!-- VŨ KHÍ TRUY VẾT BẢN QUYỀN (ANTI-LEAK FORENSIC SEARCH) -->
+      <section class="forensic-panel">
+        <div class="forensic-title">
+          <span>🔍</span> VŨ KHÍ TRUY VẾT THỦ PHẠM ĐĂNG BÁN SÁCH LẬU
+        </div>
+        <p style="font-size: 13.5px; color: var(--text-dim); line-height: 1.5;">
+          Khi Bác sĩ phát hiện tệp sách bị đăng bán trôi nổi, chỉ cần mở tệp PDF ra, lấy <strong>Mã Bản Quyền (License ID)</strong> được khắc ở chân trang / chéo trang (hoặc gõ Email / SĐT) vào ô bên dưới:
+        </p>
+
+        <form id="forensic-search-form" class="search-box-row" onsubmit="return false;">
+          <input 
+            type="text" 
+            id="forensic-query" 
+            class="search-input" 
+            placeholder="Ví dụ: LIC-GGL-261008-8080E2 hoặc 8080E2 hoặc 0971521618..." 
+            autocomplete="off"
+          />
+          <button type="submit" class="btn btn-rose" id="btn-search-forensic">
+            <span>🚨</span> Truy Vết Ngay
+          </button>
+        </form>
+
+        <div class="forensic-results" id="forensic-results-container" hidden>
+          <!-- Dynamic results -->
+        </div>
+      </section>
+
+      <!-- KHUNG BỔ SUNG NHANH EMAIL NHẬN FULL 8 QUYỂN -->
+      <section class="batch-box">
+        <div class="batch-title">
+          <span>⚡</span> Cấp Quyền Trọn Bộ FULL 8 Quyển Nhanh Cho Nhiều Email
+        </div>
+        <p style="font-size: 13px; color: var(--text-dim);">
+          Dán danh sách Gmail của các Bác sĩ đã mua/được cấp trọn bộ 8 cuốn sách (mỗi dòng một email, hoặc phân tách bằng dấu phẩy):
+        </p>
+        <textarea 
+          id="batch-emails-input" 
+          class="batch-textarea" 
+          placeholder="bacsi.a@gmail.com&#10;bacsi.b@gmail.com&#10;bacsi.c@hospital.vn"
+        ></textarea>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 10px;">
+          <span style="font-size: 12.5px; color: #FBBF24;">
+            * Cấp quyền tự động cả 8 cuốn: Fetal Echo, Timor Brain, Dị tật Q1, Williams Obs, Williams Gyn, Atlas Hysteroscopy, Langman, Gabbe.
+          </span>
+          <button type="button" class="btn btn-primary" id="btn-submit-batch-f8">
+            <span>🌟</span> Cấp Quyền Full 8 Quyển
+          </button>
+        </div>
+      </section>
+
+      <!-- BẢNG DANH MỤC HỘI VIÊN (MEMBER DIRECTORY) -->
+      <section class="table-container">
+        <div class="table-header-bar">
+          <div>
+            <div class="table-title">Danh Bạ Hội Viên &amp; Lịch Sử Chuyển Giao Sách</div>
+            <div style="font-size: 12.5px; color: var(--text-dim); margin-top: 2px;">
+              Hiển thị <span id="filtered-count" style="color: #FFF; font-weight: 700;">0</span> hội viên
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button type="button" class="btn btn-ghost" id="btn-export-csv-magic" style="padding: 8px 14px; font-size: 13px;">
+              <span>📥</span> Xuất File Excel / CSV Magic Links
+            </button>
+          </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">STT</th>
+                <th>Họ Tên &amp; Gmail</th>
+                <th>SĐT Telegram</th>
+                <th>Trạng Thái</th>
+                <th>Gói Sách Được Cấp</th>
+                <th>Đã Bắn Telegram</th>
+                <th style="text-align: right;">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="members-table-body">
+              <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 40px;">
+                  Đang tải dữ liệu hội viên...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- MODAL CHI TIẾT MEMBER & MÃ DRM TỪNG CUỐN -->
+    <div class="modal-overlay" id="member-detail-modal" hidden>
+      <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-glass); padding-bottom: 14px;">
+          <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; color: #FFF;" id="modal-user-name">Chi Tiết Hội Viên</h3>
+          <button type="button" id="btn-close-modal" style="background: none; border: none; color: #94A3B8; font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+
+        <div id="modal-user-body" style="display: flex; flex-direction: column; gap: 14px; font-size: 13.5px;">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <div style="border-top: 1px solid var(--border-glass); padding-top: 16px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn btn-ghost" id="btn-close-modal-2">Đóng</button>
+          <button type="button" class="btn btn-rose" id="btn-toggle-ban-modal">Chặn Hội Viên Này</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCRIPT ĐIỀU KHIỂN GIAO DIỆN QUẢN TRỊ -->
+    <script>
+      let currentMembers = [];
+      let selectedMember = null;
+
+      // Map tên sách
+      const bookNamesMap = {
+        "a8e0a1ad9e6b": "1. Siêu Âm Tim Thai - Fetal Echo 4e",
+        "0d4e494f71d9": "2. Siêu Âm Não Thai - Timor Brain 4e",
+        "2af32d7a3916": "3. Dị Tật Thai Quý 1 - First Trimester",
+        "e84eef8180ca": "4. Sản Khoa Williams 26e",
+        "e22a7b0b60b7": "5. Phụ Khoa Williams 4e",
+        "8c866ea0330c": "6. Atlas Nội Soi Tử Cung - Hysteroscopy",
+        "ccafa7f347dd": "7. Phôi Thai Học Langman 14e",
+        "1127814624c0": "8. Sản Khoa Gabbe Essentials",
+        "0dd24f281c75": "6. Hysteroscopy Toàn Tập"
+      };
+
+      window.addEventListener("DOMContentLoaded", fetchMembersData);
+      document.getElementById("btn-refresh-data").addEventListener("click", fetchMembersData);
+
+      async function fetchMembersData() {
+        try {
+          const resp = await fetch("/api/admin/members");
+          const res = await resp.json();
+          if (res.ok) {
+            currentMembers = res.members || [];
+            updateStats(res.stats || {});
+            renderMembersTable(currentMembers);
+          }
+        } catch (err) {
+          console.error("Lỗi tải danh sách member:", err);
+        }
+      }
+
+      function updateStats(stats) {
+        const total = stats && stats.total_members !== undefined ? stats.total_members : currentMembers.length;
+        const tele = stats && stats.telegram_verified !== undefined ? stats.telegram_verified : currentMembers.filter(m => m.phone).length;
+        const f8 = stats && stats.full_8_members !== undefined ? stats.full_8_members : currentMembers.filter(m => m.is_full_8).length;
+        const disp = stats && stats.total_books_dispatched !== undefined ? stats.total_books_dispatched : currentMembers.reduce((acc, m) => acc + Object.keys(m.dispatched_books || {}).length, 0);
+        const banned = stats && stats.banned_members !== undefined ? stats.banned_members : currentMembers.filter(m => m.status === 'banned').length;
+
+        document.getElementById("st-total").textContent = total;
+        document.getElementById("st-tele").textContent = tele;
+        document.getElementById("st-f8").textContent = f8;
+        document.getElementById("st-dispatched").textContent = disp;
+        document.getElementById("st-banned").textContent = banned;
+        document.getElementById("filtered-count").textContent = currentMembers.length;
+      }
+
+      function renderMembersTable(members) {
+        const tbody = document.getElementById("members-table-body");
+        tbody.innerHTML = "";
+
+        if (members.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 40px;">Chưa có hội viên nào trong hệ thống.</td></tr>`;
+          return;
+        }
+
+        members.forEach((m, idx) => {
+          const tr = document.createElement("tr");
+
+          const isF8 = m.is_full_8 || (m.allocated_books && m.allocated_books.length >= 8);
+          const pkgBadge = isF8 
+            ? `<span class="badge-f8">★ FULL 8 QUYỂN</span>` 
+            : `<span style="font-size: 12px; color: var(--text-dim);">${(m.allocated_books || []).length} quyển lẻ</span>`;
+
+          const teleBadge = m.telegram_verified 
+            ? `<span class="badge-tele">✓ Đã Xác Thực</span>` 
+            : `<span style="font-size: 11px; color: #94A3B8;">Chưa xác thực</span>`;
+
+          const statusBadge = m.status === "banned"
+            ? `<span class="badge-banned">🚫 ĐÃ KHÓA</span>`
+            : teleBadge;
+
+          const dispatchedCount = Object.keys(m.dispatched_books || {}).length;
+          const dispatchedText = dispatchedCount > 0 
+            ? `<strong style="color: #34D399;">${dispatchedCount} cuốn</strong>` 
+            : `<span style="color: var(--text-dim);">Chưa bắn</span>`;
+
+          const phoneDisplay = m.phone 
+            ? `<strong style="color: #38BDF8; font-family: monospace; cursor: pointer; text-decoration: underline dotted;" onclick="promptEditPhone('${m.email}', '${m.phone}')" title="Bấm để sửa số điện thoại">📱 ${escapeHtml(m.phone)}</strong>`
+            : `<button type="button" class="btn btn-ghost" style="padding: 3px 8px; font-size: 11px; color: #F59E0B;" onclick="promptEditPhone('${m.email}', '')">➕ Thêm SĐT</button>`;
+
+          tr.innerHTML = `
+            <td style="color: var(--text-dim); font-weight: 700;">${idx + 1}</td>
+            <td>
+              <div style="font-weight: 700; color: #FFF;">${escapeHtml(m.name || m.email.split("@")[0])}</div>
+              <div style="font-size: 12px; color: var(--accent-cyan); font-family: monospace;">${escapeHtml(m.email)}</div>
+            </td>
+            <td>${phoneDisplay}</td>
+            <td>${statusBadge}</td>
+            <td>${pkgBadge}</td>
+            <td>${dispatchedText}</td>
+            <td style="text-align: right; white-space: nowrap;">
+              <button type="button" class="btn btn-rose" style="padding: 5px 10px; font-size: 11.5px; margin-right: 4px;" onclick="promptDispatchTelegram('${m.email}')" title="Đóng dấu bản quyền và bắn nguyên file PDF thẳng về Telegram">
+                <span>🚀</span> Bắn Sách
+              </button>
+              <button type="button" class="btn btn-ghost" style="padding: 5px 10px; font-size: 11.5px; margin-right: 4px;" onclick="copyMemberMagicLink('${m.email}', '${m.access_token || ''}')" title="Sao chép Magic Link trực tiếp không cần OTP email">
+                <span>📋</span> Copy Link
+              </button>
+              <button type="button" class="btn btn-ghost" style="padding: 5px 10px; font-size: 11.5px;" onclick="openMemberModal('${m.email}')">
+                Chi Tiết
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // TRUY VẾT BẢN QUYỀN FORENSIC
+      document.getElementById("forensic-search-form").addEventListener("submit", async () => {
+        const query = document.getElementById("forensic-query").value.trim();
+        const resultsBox = document.getElementById("forensic-results-container");
+        if (!query) return;
+
+        resultsBox.hidden = false;
+        resultsBox.innerHTML = `<div style="text-align: center; color: var(--accent-rose); padding: 15px;"><span class="spinner"></span> Đang truy vết trong cơ sở dữ liệu...</div>`;
+
+        try {
+          const resp = await fetch("/api/admin/members/search-forensic", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query })
+          });
+          const res = await resp.json();
+
+          if (res.ok && res.results && res.results.length > 0) {
+            resultsBox.innerHTML = `
+              <div style="font-size: 13.5px; font-weight: 700; color: #FDA4AF;">
+                ⚠️ PHÁT HIỆN ${res.results.length} HỒ SƠ TRÙNG KHỚP VỚI MANH MỐI TRUY VẾT:
+              </div>
+            `;
+
+            res.results.forEach(mem => {
+              const card = document.createElement("div");
+              card.className = "result-culprit-card";
+
+              const reasonsHtml = (mem.matched_reasons || []).map(r => `<div>● ${escapeHtml(r)}</div>`).join("");
+
+              card.innerHTML = `
+                <div class="culprit-header">
+                  <div class="culprit-name">
+                    👤 ${escapeHtml(mem.name || "Không rõ tên")} 
+                    <span style="font-size: 13px; font-weight: 400; color: #94A3B8;">(${escapeHtml(mem.email)})</span>
+                  </div>
+                  <div>
+                    <strong style="color: #38BDF8; font-family: monospace; font-size: 15px;">📱 SĐT Telegram: ${escapeHtml(mem.phone || "Chưa có")}</strong>
+                  </div>
+                </div>
+
+                <div class="culprit-match-reasons">
+                  <strong>Bằng Chứng Khớp (Forensic Evidence):</strong>
+                  ${reasonsHtml}
+                </div>
+
+                <div style="font-size: 12.5px; color: var(--text-dim); display: flex; gap: 16px; flex-wrap: wrap;">
+                  <span>Xác thực Telegram: <strong>${escapeHtml(mem.verified_at || "Chưa")}</strong></span>
+                  <span>IP gần nhất: <strong>${escapeHtml((mem.ip_history || []).slice(-1)[0] || "Unknown")}</strong></span>
+                  <span>Trạng thái: <strong style="color: ${mem.status === 'banned' ? '#F87171' : '#34D399'};">${escapeHtml(mem.status || "active")}</strong></span>
+                </div>
+
+                <div style="margin-top: 8px; display: flex; gap: 10px;">
+                  <button type="button" class="btn btn-rose" style="padding: 7px 14px; font-size: 12px;" onclick="toggleBanMember('${mem.email}', '${mem.status === 'banned' ? 'active' : 'banned'}')">
+                    ${mem.status === 'banned' ? 'Mở Khóa Lại' : '🚫 Chặn Ngay Lập Tức (Ban Member)'}
+                  </button>
+                  <button type="button" class="btn btn-ghost" style="padding: 7px 14px; font-size: 12px;" onclick="openMemberModal('${mem.email}')">
+                    Xem Đầy Đủ Tệp Sách &amp; Mã DRM
+                  </button>
+                </div>
+              `;
+              resultsBox.appendChild(card);
+            });
+          } else {
+            resultsBox.innerHTML = `
+              <div style="background: rgba(255,255,255,0.04); padding: 16px; border-radius: 12px; text-align: center; color: var(--text-dim);">
+                Không tìm thấy hội viên nào khớp với từ khóa <strong>"${escapeHtml(query)}"</strong>.
+              </div>
+            `;
+          }
+        } catch (err) {
+          resultsBox.innerHTML = `<div style="color: #F87171; padding: 10px;">Lỗi kết nối khi truy vết.</div>`;
+        }
+      });
+
+      // BỔ SUNG FULL 8 QUYỂN HÀNG LOẠT
+      document.getElementById("btn-submit-batch-f8").addEventListener("click", async () => {
+        const text = document.getElementById("batch-emails-input").value.trim();
+        const btn = document.getElementById("btn-submit-batch-f8");
+
+        if (!text) {
+          alert("Vui lòng dán danh sách Gmail vào khung văn bản.");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner"></span> Đang cấp quyền Full 8 cuốn...`;
+
+        try {
+          const resp = await fetch("/api/admin/members/add-full-8", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ emails_text: text })
+          });
+          const res = await resp.json();
+
+          if (res.ok) {
+            alert(`🎉 Thành công: Đã cấp quyền FULL 8 QUYỂN cho ${res.total} email!`);
+            document.getElementById("batch-emails-input").value = "";
+            fetchMembersData();
+          } else {
+            alert("Lỗi: " + (res.error || "Không thể cấp quyền."));
+          }
+        } catch (err) {
+          alert("Lỗi kết nối máy chủ.");
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = `<span>🌟</span> Cấp Quyền Full 8 Quyển`;
+        }
+      });
+
+      // MODAL CHI TIẾT
+      function openMemberModal(email) {
+        selectedMember = currentMembers.find(m => m.email.toLowerCase() === email.toLowerCase());
+        if (!selectedMember) return;
+
+        document.getElementById("modal-user-name").textContent = `Hồ Sơ: ${selectedMember.name || selectedMember.email}`;
+        const body = document.getElementById("modal-user-body");
+
+        const disp = selectedMember.dispatched_books || {};
+        const dispKeys = Object.keys(disp);
+
+        let dispRows = "";
+        if (dispKeys.length === 0) {
+          dispRows = `<div style="color: var(--text-dim); padding: 10px;">Hội viên này chưa kích hoạt chuyển giao sách về Telegram.</div>`;
+        } else {
+          dispRows = dispKeys.map(bid => {
+            const item = disp[bid];
+            const bookName = bookNamesMap[bid] || item.book_title || bid;
+            return `
+              <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); border-radius: 10px; padding: 12px; margin-bottom: 8px;">
+                <div style="font-weight: 700; color: #FFF;">📖 ${escapeHtml(bookName)}</div>
+                <div style="font-size: 12px; color: #38BDF8; margin-top: 4px; font-family: monospace;">
+                  🔑 MÃ DRM: <strong>${escapeHtml(item.license_id || "N/A")}</strong>
+                </div>
+                <div style="font-size: 11.5px; color: var(--text-dim); margin-top: 2px;">
+                  Thời gian bắn: ${escapeHtml(item.dispatched_at || "N/A")} · Dung lượng: ${item.size_mb || "N/A"} MB · IP: ${escapeHtml(item.ip || "N/A")}
+                </div>
+              </div>
+            `;
+          }).join("");
+        }
+
+        body.innerHTML = `
+          <div><strong>Gmail:</strong> <span style="color: var(--accent-cyan);">${escapeHtml(selectedMember.email)}</span></div>
+          <div><strong>Số điện thoại Telegram:</strong> <span style="color: #FFF; font-weight: 700;">${escapeHtml(selectedMember.phone || "Chưa có")}</span></div>
+          <div><strong>Trạng thái Telegram:</strong> ${selectedMember.telegram_verified ? "✅ Đã xác thực (" + (selectedMember.verified_at || "") + ")" : "⏳ Chưa xác thực"}</div>
+          <div><strong>Gói sách:</strong> ${selectedMember.is_full_8 ? "<span class='badge-f8'>FULL 8 QUYỂN</span>" : "Sách lẻ (" + (selectedMember.allocated_books || []).length + " cuốn)"}</div>
+          <div style="margin-top: 8px;">
+            <strong style="color: #FBBF24;">📦 Chi Tiết Sách &amp; Mã Cấp Phép Forensic DRM Đã Bắn Về Telegram:</strong>
+            <div style="margin-top: 8px;">${dispRows}</div>
+          </div>
+        `;
+
+        const banBtn = document.getElementById("btn-toggle-ban-modal");
+        banBtn.textContent = selectedMember.status === "banned" ? "Mở Khóa Hội Viên" : "Chặn Hội Viên Này";
+
+        document.getElementById("member-detail-modal").hidden = false;
+      }
+
+      async function toggleBanMember(email, newStatus) {
+        if (!confirm(`Bác sĩ có chắc chắn muốn ${newStatus === 'banned' ? 'CHẶN' : 'MỞ KHÓA'} hội viên ${email}?`)) {
+          return;
+        }
+
+        try {
+          const resp = await fetch("/api/admin/members/update-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, status: newStatus })
+          });
+          const res = await resp.json();
+          if (res.ok) {
+            alert("Đã cập nhật trạng thái hội viên!");
+            document.getElementById("member-detail-modal").hidden = true;
+            fetchMembersData();
+          }
+        } catch (e) {
+          alert("Lỗi kết nối máy chủ.");
+        }
+      }
+
+      document.getElementById("btn-toggle-ban-modal").addEventListener("click", () => {
+        if (selectedMember) {
+          const newStatus = selectedMember.status === "banned" ? "active" : "banned";
+          toggleBanMember(selectedMember.email, newStatus);
+        }
+      });
+
+      document.getElementById("btn-close-modal").addEventListener("click", () => {
+        document.getElementById("member-detail-modal").hidden = true;
+      });
+      document.getElementById("btn-close-modal-2").addEventListener("click", () => {
+        document.getElementById("member-detail-modal").hidden = true;
+      });
+
+      function copyMemberMagicLink(email, token) {
+        const origin = window.location.origin;
+        const link = `${origin}/portal?token=${encodeURIComponent(token)}`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(link).then(() => {
+            alert(`✅ Đã sao chép Magic Link của ${email}:\n\n${link}`);
+          }).catch(() => {
+            prompt(`Magic Link của ${email}:`, link);
+          });
+        } else {
+          prompt(`Magic Link của ${email}:`, link);
+        }
+      }
+
+      async function sendInvitationToMember(email) {
+        if (!confirm(`Bạn có chắc chắn muốn gửi email thông báo kích hoạt tới:\n${email}?`)) return;
+        try {
+          const resp = await fetch("/api/admin/members/send-invitation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email })
+          });
+          const res = await resp.json();
+          if (res.ok) {
+            alert(`✅ ${res.message || "Đã gửi email thành công!"}\n\nLiên kết: ${res.direct_link}`);
+          } else {
+            alert(`⚠️ Thông báo: ${res.error || "Chưa cấu hình gửi SMTP tự động"}\n\nLiên kết đăng nhập trực tiếp của Bác sĩ vẫn hoàn toàn hợp lệ:\n${res.direct_link}`);
+          }
+        } catch (err) {
+          alert("Lỗi kết nối khi gửi email.");
+        }
+      }
+
+      async function promptEditPhone(email, currentPhone) {
+        const newPhone = prompt(`Nhập số điện thoại Telegram cho ${email}:`, currentPhone || "");
+        if (newPhone === null) return;
+        const clean = newPhone.trim();
+        try {
+          const resp = await fetch("/api/admin/members/update-phone", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, phone: clean })
+          });
+          const res = await resp.json();
+          if (res.ok) {
+            alert(`✅ Đã lưu số điện thoại ${clean} cho Bác sĩ ${email}!`);
+            fetchMembersData();
+          } else {
+            alert(`Lỗi: ${res.error || "Không thể cập nhật"}`);
+          }
+        } catch (err) {
+          alert("Lỗi kết nối máy chủ.");
+        }
+      }
+
+      async function promptDispatchTelegram(email) {
+        const mem = currentMembers.find(m => m.email === email);
+        if (!mem || !mem.phone) {
+          alert(`Bác sĩ ${email} chưa có số điện thoại Telegram! Vui lòng bấm vào "➕ Thêm SĐT" để lưu số điện thoại trước.`);
+          return;
+        }
+        const bookOptions = [
+          "04_san_khoa_williams (1. Sản Khoa Williams 26e Toàn Tập)",
+          "05_phu_khoa_williams (2. Phụ Khoa Williams 4e Toàn Tập)",
+          "01_tim_thai (3. Siêu Âm Tim Thai - Fetal Echo 4e)",
+          "02_timor_nao (4. Siêu Âm Não Thai - Timor Brain 4e)",
+          "03_di_tat_quy_1 (5. Dị Tật Thai Quý 1 - Abuhamad)",
+          "06_noi_soi_buong_tc (6. Atlas Phẫu Thuật Nội Soi Buồng Tử Cung)",
+          "07_phoi_thai_langman (7. Phôi Thai Học Langman 14e)",
+          "08_gabbe (8. Sản Khoa Gabbe Essentials)"
+        ];
+        const selected = prompt(`CHỌN SÁCH GỬI TẶNG QUA TELEGRAM:\nNgười nhận: ${mem.name || email} (${mem.phone})\n\n${bookOptions.join("\n")}\n\nNhập mã sách (mặc định: 04_san_khoa_williams):`, "04_san_khoa_williams");
+        if (!selected) return;
+        
+        try {
+          const resp = await fetch("/api/admin/members/dispatch-telegram", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, book_id: selected.trim() })
+          });
+          const res = await resp.json();
+          if (res.ok) {
+            alert(`🚀 THÀNH CÔNG:\nĐã đưa sách '${selected}' vào hàng đợi tuần tự gửi Telegram cho Bác sĩ ${mem.phone}!\nMáy chủ Cloud Run đang tự động đóng dấu và bắn file.`);
+            fetchMembersData();
+          } else {
+            alert(`Lỗi: ${res.error || "Không thể gửi"}`);
+          }
+        } catch (err) {
+          alert("Lỗi kết nối máy chủ.");
+        }
+      }
+
+      document.getElementById("btn-batch-gift-telegram")?.addEventListener("click", async () => {
+        const verifiedCount = currentMembers.filter(m => m.phone).length;
+        if (verifiedCount === 0) {
+          alert("Chưa có Bác sĩ nào có số điện thoại Telegram!");
+          return;
+        }
+        const bookId = prompt(`🎁 TẶNG SÁCH TOÀN BỘ:\nHiện có ${verifiedCount} Bác sĩ đã đăng ký số điện thoại Telegram.\n\nNhập mã sách muốn tặng (ví dụ: 04_san_khoa_williams, 08_gabbe, 01_tim_thai...):`, "04_san_khoa_williams");
+        if (!bookId) return;
+        if (!confirm(`Xác nhận: Đưa ${verifiedCount} Bác sĩ vào hàng đợi tuần tự để tự động đóng dấu và bắn sách '${bookId}' về Telegram?`)) return;
+        
+        try {
+          const resp = await fetch("/api/admin/members/batch-dispatch-telegram", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ book_id: bookId.trim() })
+          });
+          const res = await resp.json();
+          if (res.ok) {
+            alert(`🎉 Đã đưa ${res.queued_count} tác vụ vào hàng đợi tuần tự!\nMáy chủ Cloud Run sẽ tuần tự đóng dấu và bắn file về Telegram cho từng Bác sĩ.`);
+            fetchMembersData();
+          } else {
+            alert(`Lỗi: ${res.error || "Không thể tạo hàng đợi"}`);
+          }
+        } catch (err) {
+          alert("Lỗi kết nối máy chủ.");
+        }
+      });
+
+      function escapeHtml(str) {
+        return (str || "").replace(/[&<>'"]/g, 
+          tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+      }
+    </script>
+  </body>
+</html>

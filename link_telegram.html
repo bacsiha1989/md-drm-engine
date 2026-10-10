@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cổng Đăng Ký Số Điện Thoại Telegram Nhận Sách — MomDiary Academic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090D16;
+      --card-bg: rgba(18, 24, 38, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-cyan: #06B6D4;
+      --accent-emerald: #10B981;
+      --accent-glow: rgba(6, 182, 212, 0.25);
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
+      --tele-blue: #229ED9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Background Ambient Lights */
+    .ambient-glow-1 {
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.18) 0%, rgba(16, 185, 129, 0.08) 50%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      z-index: 1;
+    }
+
+    /* Header */
+    .brand-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--accent-cyan);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .main-title {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1.3;
+      background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 50%, #94A3B8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .sub-title {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Card */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      position: relative;
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #E2E8F0;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 52px;
+      padding: 0 16px;
+      background: rgba(10, 15, 26, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      color: #FFFFFF;
+      font-size: 15px;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+      background: rgba(10, 15, 26, 0.95);
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    /* Buttons */
+    .btn-submit {
+      width: 100%;
+      height: 54px;
+      background: linear-gradient(135deg, #06B6D4 0%, #10B981 100%);
+      border: none;
+      border-radius: 14px;
+      color: #04101A;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 8px 24px -6px rgba(6, 182, 212, 0.4);
+      transition: all 0.2s ease;
+      margin-top: 10px;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -6px rgba(6, 182, 212, 0.5);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Success / Result Box */
+    .result-box {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 18px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .result-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #34D399;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .member-info-row {
+      font-size: 13px;
+      color: #CBD5E1;
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+
+    .member-info-row strong {
+      color: #FFFFFF;
+    }
+
+    .books-list-box {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .books-list-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .book-item {
+      font-size: 13px;
+      color: #F1F5F9;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .book-item span {
+      color: #34D399;
+    }
+
+    .btn-open-telegram {
+      width: 100%;
+      height: 54px;
+      background: linear-gradient(135deg, #229ED9 0%, #1A7FB0 100%);
+      border: none;
+      border-radius: 14px;
+      color: #FFFFFF;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 18px;
+      box-shadow: 0 8px 24px -6px rgba(34, 158, 217, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-open-telegram:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -6px rgba(34, 158, 217, 0.55);
+    }
+
+    /* Error Alert */
+    .alert-error {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #FCA5A5;
+      font-size: 13px;
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-top-color: #04101A;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Footer */
+    .footer-note {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .footer-note a {
+      color: var(--accent-cyan);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ambient-glow-1"></div>
+
+  <div class="container">
+    <!-- Brand Header -->
+    <div class="brand-header">
+      <div class="badge-pill">
+        <span>⚡</span> TỰ ĐỘNG HÓA 100% QUA TELEGRAM
+      </div>
+      <h1 class="main-title">Đăng Ký Số Điện Thoại Nhận Sách</h1>
+      <p class="sub-title">Dành cho Bác sĩ đã đăng ký sách chuyên khảo. Hệ thống sẽ tự động liên kết số điện thoại để Bot gửi tài liệu trực tiếp về Telegram.</p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card">
+      <form id="reg-form" onsubmit="return false;">
+        <!-- Email Input -->
+        <div class="form-group">
+          <label class="form-label" for="user-email">
+            <span>📧</span> Địa chỉ Email đăng ký mua sách (Gmail):
+          </label>
+          <input type="email" id="user-email" class="form-input" placeholder="Ví dụ: bacsihue@gmail.com" required autocomplete="email">
+          <div class="form-hint">* Nhập chính xác Gmail Bác sĩ đã cung cấp khi mua sách để hệ thống đối chiếu.</div>
+        </div>
+
+        <!-- Phone Input -->
+        <div class="form-group">
+          <label class="form-label" for="user-phone">
+            <span>📱</span> Số điện thoại đang dùng Telegram:
+          </label>
+          <input type="tel" id="user-phone" class="form-input" placeholder="Ví dụ: 0985 651 775 hoặc 0588 555 525" required autocomplete="tel">
+          <div class="form-hint">* Số điện thoại Bác sĩ đã dùng để đăng ký tài khoản Telegram.</div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="btn-submit" class="btn-submit">
+          <span id="btn-icon">🔗</span>
+          <span id="btn-text">XÁC NHẬN LIÊN KẾT SỐ ĐIỆN THOẠI</span>
+        </button>
+
+        <!-- Error Alert -->
+        <div id="error-alert" class="alert-error" style="display: none;">
+          <span>⚠️</span>
+          <div id="error-text"></div>
+        </div>
+      </form>
+
+      <!-- Success Result Box (Hidden by default) -->
+      <div id="success-box" class="result-box" style="display: none;">
+        <div class="result-title">
+          <span>🎉</span> LIÊN KẾT SỐ ĐIỆN THOẠI THÀNH CÔNG!
+        </div>
+
+        <div class="member-info-row">Bác sĩ: <strong id="res-name">...</strong></div>
+        <div class="member-info-row">Email: <strong id="res-email">...</strong></div>
+        <div class="member-info-row">Số điện thoại Telegram: <strong id="res-phone" style="color: #34D399;">...</strong></div>
+
+        <div class="books-list-box">
+          <div class="books-list-title">📚 Danh mục được cấp phép (<span id="res-books-count">0</span> cuốn):</div>
+          <div id="res-books-items"></div>
+        </div>
+
+        <p style="font-size: 13px; color: #CBD5E1; margin-top: 14px; line-height: 1.5;">
+          👉 <strong>BƯỚC TIẾP THEO:</strong> Bác sĩ hãy chạm vào nút xanh bên dưới để mở Bot Telegram. Khi Bot mở ra, bấm nút <strong>Start</strong> và chạm vào <strong>📱 [Bấm để xác nhận số điện thoại]</strong>, tài liệu sẽ được gửi về máy ngay lập tức!
+        </p>
+
+        <a id="btn-tele-link" href="https://t.me/Aivannang_bot" class="btn-open-telegram" target="_blank">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+          </svg>
+          MỞ BOT TELEGRAM ĐỂ NHẬN SÁCH NGAY ➔
+        </a>
+      </div>
+    </div>
+
+    <!-- Footer Note -->
+    <div class="footer-note">
+      MomDiary Academic Research &bull; Hệ Thống Chuyển Giao Tri Thức Y Học<br>
+      Cần hỗ trợ trực tiếp? Liên hệ Zalo / Telegram: <strong>BS Phạm Ngọc Hà</strong>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('reg-form');
+    const inputEmail = document.getElementById('user-email');
+    const inputPhone = document.getElementById('user-phone');
+    const btnSubmit = document.getElementById('btn-submit');
+    const btnText = document.getElementById('btn-text');
+    const btnIcon = document.getElementById('btn-icon');
+    const errorAlert = document.getElementById('error-alert');
+    const errorText = document.getElementById('error-text');
+
+    const successBox = document.getElementById('success-box');
+    const resName = document.getElementById('res-name');
+    const resEmail = document.getElementById('res-email');
+    const resPhone = document.getElementById('res-phone');
+    const resBooksCount = document.getElementById('res-books-count');
+    const resBooksItems = document.getElementById('res-books-items');
+
+    // Tự động lấy tham số URL nếu có sẵn (?email=... hoặc ?t=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramEmail = urlParams.get('email') || urlParams.get('token') || '';
+    const paramPhone = urlParams.get('phone') || urlParams.get('t') || '';
+    if (paramEmail) inputEmail.value = paramEmail;
+    if (paramPhone) inputPhone.value = paramPhone;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorAlert.style.display = 'none';
+
+      const email = inputEmail.value.trim().toLowerCase();
+      const phone = inputPhone.value.trim().replace(/[\s\-\.]/g, '');
+
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        showError('Vui lòng nhập địa chỉ Email Gmail hợp lệ.');
+        inputEmail.focus();
+        return;
+      }
+
+      if (!phone || phone.length < 9) {
+        showError('Vui lòng nhập số điện thoại Telegram hợp lệ (ít nhất 9 chữ số).');
+        inputPhone.focus();
+        return;
+      }
+
+      btnSubmit.disabled = true;
+      btnIcon.innerHTML = '<div class="spinner"></div>';
+      btnText.textContent = 'ĐANG XÁC THỰC & LIÊN KẾT...';
+
+      try {
+        const resp = await fetch('/api/register-telegram-phone', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, phone })
+        });
+        const data = await resp.json();
+
+        if (!data.ok) {
+          showError(data.error || 'Không tìm thấy hồ sơ đăng ký cho Email này.');
+          return;
+        }
+
+        // Hiển thị kết quả thành công
+        form.style.display = 'none';
+        successBox.style.display = 'block';
+
+        resName.textContent = data.name || email.split('@')[0];
+        resEmail.textContent = data.email || email;
+        resPhone.textContent = data.phone || phone;
+        resBooksCount.textContent = (data.books || []).length;
+
+        resBooksItems.innerHTML = '';
+        (data.books || []).forEach((book, idx) => {
+          const item = document.createElement('div');
+          item.className = 'book-item';
+          item.innerHTML = `<span>✓</span> <div><strong>${idx + 1}. ${book.book_title}</strong></div>`;
+          resBooksItems.appendChild(item);
+        });
+
+      } catch (err) {
+        showError('Lỗi kết nối máy chủ. Vui lòng kiểm tra lại mạng hoặc thử lại sau ít phút.');
+      } finally {
+        btnSubmit.disabled = false;
+        btnIcon.textContent = '🔗';
+        btnText.textContent = 'XÁC NHẬN LIÊN KẾT SỐ ĐIỆN THOẠI';
+      }
+    });
+
+    function showError(msg) {
+      errorText.textContent = msg;
+      errorAlert.style.display = 'flex';
+    }
+  </script>
+</body>
+</html>

@@ -78,7 +78,7 @@ class ForensicWatermarker:
         timestr = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
         clean_buyer_name = buyer_name.strip() or "Bác sĩ"
         clean_phone = buyer_phone.strip() or "0900000000"
-        clean_email = buyer_email.strip() or "doctor@momdiary.vn"
+        clean_email = buyer_email.strip() or "doctor@gmail.com"
 
         if not license_id:
             license_id = f"LIC-{time.strftime('%y%m%d')}-{hashlib.md5(f'{clean_phone}:{timestamp}'.encode()).hexdigest()[:6].upper()}"
@@ -105,62 +105,31 @@ class ForensicWatermarker:
         doc = fitz.open(str(input_path))
         total_pages = len(doc)
 
-        footer_text = (
-            f"Bản quyền cấp cho: {clean_buyer_name} | {clean_email} | ĐT: {clean_phone} | "
-            f"Mã: {license_id} | Ngày: {timestr.split()[0]} | Nghiêm cấm sao chép, phát tán, mua bán"
-        )
-        if custom_note:
-            footer_text += f" ({custom_note})"
+        # Chuỗi định danh ẩn: Không dính chữ MomDiary, chỉ ghi 'MD ebook - {email} - {phone}'
+        stealth_text = f"MD ebook - {clean_email} - {clean_phone}"
 
-        diag_line1 = " · ".join(x for x in (clean_email, clean_phone) if x) or clean_buyer_name
-        diag_line2 = f"{license_id} · Cấm sao chép, mua bán"
-
-        font_file = _vn_font_file()
-        vn_font = fitz.Font(fontfile=font_file) if font_file else fitz.Font("helv")
-        fname = "vnstamp" if font_file else "helv"
-
+        # Đóng dấu ẩn trên 100% TẤT CẢ CÁC TRANG trong sách:
+        # Sử dụng kỹ thuật kép: render_mode=3 (vô hình PDF) + màu trắng (#FFFFFF).
+        # - Mắt người nhìn vào: 100% không thấy gì, sách sạch đẹp như bản gốc nhà xuất bản.
+        # - Trình chuyển đổi Word (DOCX): Kéo nguyên vẹn text vào file Word; Ctrl+F hoặc AI đọc được 100%.
         for page_idx in range(total_pages):
             page = doc[page_idx]
             rect = page.rect
-            if font_file:
-                page.insert_font(fontname=fname, fontfile=font_file)
 
-            # Tầng 1: Footer
-            if visible_footer:
-                footer_rect = fitz.Rect(rect.x0 + 24, rect.y1 - 11, rect.x1 - 24, rect.y1 - 1)
-                try:
-                    page.insert_textbox(
-                        footer_rect,
-                        footer_text,
-                        fontsize=5.5,
-                        fontname=fname,
-                        color=(0.45, 0.45, 0.45),
-                        align=fitz.TEXT_ALIGN_CENTER
-                    )
-                except Exception:
-                    page.insert_text(
-                        fitz.Point(rect.x0 + 36, rect.y1 - 15),
-                        footer_text[:90],
-                        fontsize=7,
-                        color=(0.45, 0.45, 0.45)
-                    )
+            # 1. Chèn chuỗi ẩn 'MD ebook - email - sđt' ở mép chân trang
+            try:
+                page.insert_text(
+                    fitz.Point(rect.x0 + 36, rect.y1 - 10),
+                    stealth_text,
+                    fontsize=6.5,
+                    fontname="helv",
+                    color=(1.0, 1.0, 1.0),
+                    render_mode=3
+                )
+            except Exception:
+                pass
 
-            # Tầng 1B: Dấu chéo mờ
-            if visible_diagonal:
-                diag = rect.width * 0.9
-                fs = max(10.0, min(26.0, diag / max(1.0, vn_font.text_length(diag_line1, fontsize=1))))
-                fs2 = fs * 0.6
-                for cy in (rect.height * 0.33, rect.height * 0.70):
-                    center = fitz.Point(rect.width / 2, cy)
-                    w1 = vn_font.text_length(diag_line1, fontsize=fs)
-                    w2 = vn_font.text_length(diag_line2, fontsize=fs2)
-                    mat = fitz.Matrix(-30)
-                    page.insert_text(fitz.Point(center.x - w1 / 2, center.y), diag_line1, fontsize=fs, fontname=fname,
-                                     color=(0.55, 0.55, 0.55), fill_opacity=0.18, morph=(center, mat))
-                    page.insert_text(fitz.Point(center.x - w2 / 2, center.y + fs * 1.1), diag_line2, fontsize=fs2,
-                                     fontname=fname, color=(0.55, 0.55, 0.55), fill_opacity=0.18, morph=(center, mat))
-
-            # Tầng 2: Steganography
+            # 2. Thủy vân vô hình steganography mã hóa nhị phân
             if invisible_steganography:
                 try:
                     page.insert_text(
@@ -173,32 +142,30 @@ class ForensicWatermarker:
                 except Exception:
                     pass
 
-        # Tầng 3: Metadata
+        # Tầng Siêu dữ liệu số (Metadata): Sạch sẽ, trung tính, không chứa từ khóa MomDiary
         if metadata_trap:
             meta = doc.metadata or {}
-            trap_tag = f"DRM:{license_id}:{signature}"
-            meta["keywords"] = f"{meta.get('keywords', '')} {trap_tag}".strip()
-            meta["author"] = clean_buyer_name
-            meta["subject"] = f"Bản quyền: {clean_buyer_name} | SĐT: {clean_phone} | Lic: {license_id}"
-            meta["producer"] = f"MinhTranslate AI DRM Engine v2.0 [Lic:{license_id}]"
+            meta["author"] = "MD ebook"
+            meta["subject"] = stealth_text
+            meta["keywords"] = f"MD ebook {clean_email} {clean_phone} {license_id}".strip()
+            meta["producer"] = "MD ebook"
+            meta["creator"] = "MD ebook"
             doc.set_metadata(meta)
 
-        # Lưu file
-        perm = (
-            fitz.PDF_PERM_PRINT
-            | fitz.PDF_PERM_PRINT_HQ
-            | fitz.PDF_PERM_ACCESSIBILITY
-        )
-        owner_pw = f"OWNER_KEY_{license_id}_{signature[:12]}"
+        # Lưu file kèm Khóa Quyền Hạn Chủ Sở Hữu (Owner Permissions Lock)
+        # Người nhận mở đọc và in ấn bình thường (user_pw=""), khóa quyền sửa đổi.
+        perm = fitz.PDF_PERM_PRINT if lock_permissions else None
+        import secrets as _secrets
+        owner_pw = f"MD_DRM_PROTECTED_2026_{_secrets.token_urlsafe(20)}"[:40] if lock_permissions else None
         
         doc.save(
             str(output_path),
-            deflate=True,
-            clean=True,
+            deflate=False,
+            clean=False,
             encryption=fitz.PDF_ENCRYPT_AES_256 if lock_permissions else fitz.PDF_ENCRYPT_NONE,
-            owner_pw=owner_pw if lock_permissions else None,
+            owner_pw=owner_pw,
             user_pw="",
-            permissions=perm if lock_permissions else None,
+            permissions=perm,
         )
         doc.close()
 

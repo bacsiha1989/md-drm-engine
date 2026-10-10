@@ -44,6 +44,9 @@ try:
         send_telegram_otp_by_phone,
         send_file_via_userbot,
         normalize_phone,
+        _send_via_telegram_bot_api,
+        _send_bot_contact_request,
+        get_credentials,
     )
 except ImportError:
     from .telegram_userbot import (
@@ -51,6 +54,9 @@ except ImportError:
         send_telegram_otp_by_phone,
         send_file_via_userbot,
         normalize_phone,
+        _send_via_telegram_bot_api,
+        _send_bot_contact_request,
+        get_credentials,
     )
 
 R2_PUBLIC_BASE = os.environ.get(
@@ -165,6 +171,7 @@ TOKENS_FILE = STAMPED_DIR / "tokens.json"
 MEMBERS_FILE = BASE_DIR / "members.json"
 PORTAL_HTML_FILE = BASE_DIR / "portal.html"
 ADMIN_HTML_FILE = BASE_DIR / "admin.html"
+LINK_TELEGRAM_HTML_FILE = BASE_DIR / "link_telegram.html"
 DOWNLOAD_TOKENS = {}
 
 ID_TO_BOOK_KEY = {
@@ -221,6 +228,14 @@ def _find_member_by_token_or_email(identifier: str):
     for em, data in members.items():
         if em.lower() == clean_id:
             return em, data
+
+    # Tìm theo số điện thoại (nếu identifier hoặc phone khớp)
+    clean_phone = normalize_phone(identifier)
+    if clean_phone and len(clean_phone) >= 9:
+        for em, data in members.items():
+            m_phone = normalize_phone(data.get("phone", "")) if data.get("phone") else ""
+            if m_phone and m_phone == clean_phone:
+                return em, data
 
     return None, None
 
@@ -324,6 +339,29 @@ def _dispatch_worker():
             if not phone:
                 raise ValueError(f"Thiếu số điện thoại Telegram cho {email}")
 
+            # Kiểm tra nếu sách đã được gửi Telegram thành công trước đó -> Bỏ qua để không spam lại
+            members_check = _load_members()
+            mem_data = members_check.get(email, {})
+            disp_entry = mem_data.get("dispatched_books", {}).get(clean_bid, {})
+            if disp_entry.get("telegram_sent") is True:
+                old_fname = disp_entry.get("file_name", "")
+                old_dl = disp_entry.get("download_url", "")
+                print(f"⏩ [Queue Dispatch Worker] Sách '{book_info['title']}' đã gửi Telegram cho {phone} trước đó, bỏ qua để tránh trùng lặp.", flush=True)
+                TASK_STATUSES[task_id] = {
+                    "status": "completed",
+                    "email": email,
+                    "book_id": clean_bid,
+                    "book_title": book_info["title"],
+                    "phone": phone,
+                    "size_mb": disp_entry.get("size_mb", 0.0),
+                    "filename": old_fname,
+                    "download_url": old_dl,
+                    "telegram_sent": True,
+                    "message": f"Sách đã được chuyển giao vào Telegram của Bác sĩ trước đó."
+                }
+                DISPATCH_QUEUE.task_done()
+                continue
+
             print(f"🚀 [Queue Dispatch Worker] Bắt đầu xử lý: BS {name} ({phone}) | Sách: {book_info['title']}...")
             source_pdf = _ensure_book_in_cache(book_info["r2_key"])
             license_id = f"LIC-GGL-{time.strftime('%y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
@@ -334,7 +372,7 @@ def _dispatch_worker():
                 buyer_phone=phone,
                 buyer_email=email,
                 license_id=license_id,
-                custom_note="MomDiary Google Cloud Run Singapore",
+                custom_note="MD ebook",
                 visible_footer=True,
                 visible_diagonal=True,
                 invisible_steganography=True,
@@ -346,14 +384,13 @@ def _dispatch_worker():
             download_url = f"/api/portal/download?file={out_path.name}"
 
             caption = (
-                f"📚 <b>THƯ VIỆN CHUYÊN KHẢO Y HỌC (GOOGLE CLOUD RUN)</b>\n\n"
-                f"Xin chào Bác sĩ <b>{name}</b>,\n"
-                f"Hệ thống Thư viện xin gửi Bác sĩ file tài liệu chuyên khảo nguyên bản đã được cấp phép &amp; định danh riêng:\n\n"
+                f"📚 <b>TÀI LIỆU CHUYÊN KHẢO Y HỌC</b>\n\n"
+                f"Kính gửi Bác sĩ <b>{name}</b>,\n"
+                f"Tài liệu chuyên khảo điện tử định danh riêng:\n\n"
                 f"📖 <b>Sách:</b> {book_info['title']}\n"
                 f"📱 <b>SĐT:</b> <code>{phone}</code>\n"
-                f"✉️ <b>Email:</b> <code>{email}</code>\n"
-                f"🔑 <b>Mã cấp phép:</b> <code>{license_id}</code>\n\n"
-                f"<i>Tài liệu lưu hành nội bộ phục vụ nghiên cứu &amp; tra cứu chuyên môn. Bản quyền pháp y đã được kích hoạt.</i>"
+                f"✉️ <b>Email:</b> <code>{email}</code>\n\n"
+                f"<i>Tài liệu học thuật phục vụ nghiên cứu &amp; tra cứu chuyên môn.</i>"
             )
 
             tele_sent = False
@@ -411,7 +448,7 @@ def _dispatch_worker():
                     "download_url": download_url,
                     "telegram_sent": False,
                     "error": tele_err,
-                    "message": f"Đã đóng dấu bản quyền xong ({file_size_mb:.1f} MB)! Telegram chưa kết nối được SĐT, Bác sĩ bấm nút để tải trực tiếp file về máy."
+                    "message": f"Đã chuẩn bị xong ({file_size_mb:.1f} MB)! Bác sĩ có thể bấm nút để tải trực tiếp file về máy."
                 }
         except Exception as exc:
             print(f"❌ [Queue Dispatch Worker Error] {exc}", file=sys.stderr, flush=True)
@@ -429,7 +466,7 @@ def _dispatch_worker():
             }
         finally:
             DISPATCH_QUEUE.task_done()
-            time.sleep(1) # Nghỉ 1 giây giữa các file để điều tiết mạng và Telegram API
+            time.sleep(3) # Nghỉ 3 giây giữa các file để điều tiết mạng và Telegram API tránh FloodWait
 
 _worker_thread = threading.Thread(target=_dispatch_worker, daemon=True)
 _worker_thread.start()
@@ -445,14 +482,6 @@ def enqueue_member_books(email: str, phone: Optional[str] = None, force_all: boo
     target_phone = phone or mem.get("phone", "")
     if not target_phone:
         return []
-
-    # Luôn nâng cấp Full 8 cuốn sách chuyên khảo cho mọi Bác sĩ
-    if not mem.get("is_full_8") or mem.get("allocated_books") != ["all"]:
-        mem["is_full_8"] = True
-        mem["allocated_books"] = ["all"]
-        members[clean_email]["is_full_8"] = True
-        members[clean_email]["allocated_books"] = ["all"]
-        _save_members(members)
 
     name = mem.get("name", "") or clean_email.split("@")[0]
     allocated = _get_allocated_books_for_member(mem)
@@ -524,6 +553,17 @@ class DRMRequestHandler(BaseHTTPRequestHandler):
         if path in ("/", "/portal"):
             if PORTAL_HTML_FILE.exists():
                 content = PORTAL_HTML_FILE.read_bytes()
+                self.send_response(HTTPStatus.OK)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(content)))
+                self._send_cors_headers()
+                self.end_headers()
+                self.wfile.write(content)
+                return
+
+        if path in ("/link-telegram", "/dang-ky-sdt"):
+            if LINK_TELEGRAM_HTML_FILE.exists():
+                content = LINK_TELEGRAM_HTML_FILE.read_bytes()
                 self.send_response(HTTPStatus.OK)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Content-Length", str(len(content)))
@@ -648,7 +688,188 @@ class DRMRequestHandler(BaseHTTPRequestHandler):
             self._handle_admin_batch_dispatch_telegram()
             return
 
+        if path == "/api/register-telegram-phone":
+            self._handle_register_telegram_phone()
+            return
+
+        if path == "/api/telegram-webhook":
+            self._handle_telegram_webhook()
+            return
+
         self._json(HTTPStatus.NOT_FOUND, {"ok": False, "error": f"Endpoint POST không tồn tại: {path}"})
+
+    def _handle_telegram_webhook(self):
+        try:
+            payload = self._read_json_body()
+            if not payload or not isinstance(payload, dict):
+                self._json(HTTPStatus.OK, {"ok": True})
+                return
+
+            message = payload.get("message") or payload.get("edited_message")
+            if not message:
+                self._json(HTTPStatus.OK, {"ok": True})
+                return
+
+            chat = message.get("chat", {})
+            chat_id = chat.get("id")
+            if not chat_id:
+                self._json(HTTPStatus.OK, {"ok": True})
+                return
+
+            text = (message.get("text") or "").strip()
+            contact = message.get("contact")
+            from_user = message.get("from", {})
+            user_name = f"{from_user.get('first_name', '')} {from_user.get('last_name', '')}".strip() or "Bác sĩ"
+            user_name = user_name.replace("  ", " ").strip()
+
+            _, _, _, bot_token, _ = get_credentials()
+
+            # TRƯỜNG HỢP 1: BÁC SĨ CHẠM VÀO NÚT BẤM "XÁC NHẬN SỐ ĐIỆN THOẠI"
+            if contact:
+                phone_num = contact.get("phone_number", "")
+                clean_phone = normalize_phone(phone_num)
+                sender_name = f"{contact.get('first_name', '')} {contact.get('last_name', '')}".strip() or user_name
+                sender_name = sender_name.replace("  ", " ").strip()
+
+                members = _load_members()
+                found_email = None
+                for em, mem in members.items():
+                    m_phone = normalize_phone(mem.get("phone", "")) if mem.get("phone") else ""
+                    if m_phone and m_phone == clean_phone:
+                        found_email = em
+                        break
+
+                if not found_email:
+                    # Hướng dẫn Bác sĩ mở trang web tự động liên kết SĐT trong 30 giây
+                    link_url = "https://md-drm-engine-85568848902.asia-southeast1.run.app/link-telegram"
+                    reject_msg = (
+                        f"⚠️ <b>CHƯA TÌM THẤY HỒ SƠ LIÊN KẾT</b>\n\n"
+                        f"Kính chào Bác sĩ <b>{sender_name}</b>,\n"
+                        f"Số điện thoại Telegram <code>{clean_phone}</code> hiện chưa được liên kết với Email mua sách trong hệ thống.\n\n"
+                        f"👉 <b>Bác sĩ vui lòng chạm vào liên kết dưới đây</b> để điền Email đã mua sách và kích hoạt số điện thoại ngay trong 30 giây:\n"
+                        f"<a href='{link_url}?phone={clean_phone}'>{link_url}</a>\n\n"
+                        f"<i>Sau khi xác nhận xong, Bác sĩ quay lại đây chạm vào nút chia sẻ số điện thoại là tài liệu sẽ được gửi về máy ngay lập tức!</i>"
+                    )
+                    _send_via_telegram_bot_api(bot_token, chat_id, reject_msg, remove_keyboard=True)
+                    self._json(HTTPStatus.OK, {"ok": True})
+                    return
+
+                # Nếu đã có hồ sơ trong hệ thống:
+                members[found_email]["phone"] = clean_phone
+                members[found_email]["telegram_chat_id"] = chat_id
+                members[found_email]["telegram_verified"] = True
+                if sender_name and sender_name != "Bác sĩ":
+                    members[found_email]["name"] = sender_name
+
+                _save_members(members)
+                mem_data = members[found_email]
+                allocated = _get_allocated_books_for_member(mem_data)
+                book_count = len(allocated)
+
+                if book_count == 0:
+                    no_book_msg = (
+                        f"⚠️ <b>HỒ SƠ CHƯA ĐƯỢC PHÂN BỔ SÁCH</b>\n\n"
+                        f"Kính chào Bác sĩ <b>{sender_name}</b>,\n"
+                        f"Hồ sơ của Bác sĩ (<code>{clean_phone}</code>) hiện chưa có cuốn sách nào được cấp phép.\n\n"
+                        f"👉 <i>Vui lòng liên hệ BS Hà để được hỗ trợ kích hoạt.</i>"
+                    )
+                    _send_via_telegram_bot_api(bot_token, chat_id, no_book_msg, remove_keyboard=True)
+                    self._json(HTTPStatus.OK, {"ok": True})
+                    return
+
+                portal_url = f"https://md-drm-engine-85568848902.asia-southeast1.run.app/portal?t={clean_phone}"
+
+                ack_msg = (
+                    f"🎉 <b>XÁC NHẬN SỐ ĐIỆN THOẠI THÀNH CÔNG!</b>\n\n"
+                    f"Kính chào Bác sĩ <b>{sender_name}</b>,\n"
+                    f"📱 Số điện thoại Telegram: <code>{clean_phone}</code>\n"
+                    f"📚 Danh mục cấp phép của Bác sĩ: <b>{book_count} cuốn sách chuyên khảo</b>\n\n"
+                    f"🛡️ Máy chủ Google Cloud Run đang kích hoạt tiến trình <b>đóng dấu 5 tầng DRM bản quyền định danh riêng</b> mang tên Bác sĩ và sẽ gửi từng file PDF nguyên bản trực tiếp vào đây ngay bây giờ...\n\n"
+                    f"🌐 <i>Bác sĩ cũng có thể tra cứu và bấm tải trực tiếp về máy tại:</i>\n"
+                    f"<a href='{portal_url}'>{portal_url}</a>\n\n"
+                    f"<i>Vui lòng giữ kết nối trong ít phút để nhận đầy đủ tài liệu!</i>"
+                )
+                _send_via_telegram_bot_api(bot_token, chat_id, ack_msg, remove_keyboard=True)
+
+                # Tự động đưa đúng số sách được cấp vào hàng đợi gửi tuần tự
+                enqueue_member_books(found_email, clean_phone)
+                self._json(HTTPStatus.OK, {"ok": True})
+                return
+
+            # TRƯỜNG HỢP 2: BÁC SĨ BẤM /start HOẶC GỬI TIN NHẮN BẤT KỲ
+            welcome_msg = (
+                f"🩺 <b>THƯ VIỆN CHUYÊN KHẢO Y HỌC MD EBOOK</b>\n\n"
+                f"Kính chào Bác sĩ <b>{user_name}</b>,\n"
+                f"Chào mừng Bác sĩ đến với Cổng Tiếp Nhận Tài Liệu Chuyên Khảo Y Học Bào Thai &amp; Sản Phụ Khoa.\n\n"
+                f"Toàn bộ tài liệu đều được đóng dấu bản quyền định danh cá nhân hóa (5 tầng DRM chống sao chép lậu).\n\n"
+                f"👉 <b>Bác sĩ vui lòng chạm vào nút bấm bên dưới</b> để xác nhận số điện thoại chính chủ và nhận tài liệu về Telegram ngay lập tức:"
+            )
+            _send_bot_contact_request(bot_token, chat_id, welcome_msg)
+            self._json(HTTPStatus.OK, {"ok": True})
+        except Exception as e:
+            logger.error("Lỗi xử lý webhook Telegram: %s", e)
+            self._json(HTTPStatus.OK, {"ok": True})
+
+    def _handle_register_telegram_phone(self):
+        try:
+            payload = self._read_json_body()
+            raw_email = str(payload.get("email") or "").strip().lower()
+            raw_phone = str(payload.get("phone") or "").strip()
+            clean_phone = normalize_phone(raw_phone)
+
+            if not raw_email or "@" not in raw_email:
+                self._json(HTTPStatus.BAD_REQUEST, {
+                    "ok": False,
+                    "error": "Vui lòng nhập địa chỉ Email Gmail hợp lệ."
+                })
+                return
+
+            if not clean_phone or len(clean_phone) < 9:
+                self._json(HTTPStatus.BAD_REQUEST, {
+                    "ok": False,
+                    "error": "Vui lòng nhập số điện thoại Telegram hợp lệ (từ 9 số trở lên)."
+                })
+                return
+
+            members = _load_members()
+            found_email = None
+
+            # Tìm theo email chính xác hoặc case-insensitive
+            for em in members:
+                if em.lower() == raw_email:
+                    found_email = em
+                    break
+
+            if not found_email:
+                self._json(HTTPStatus.NOT_FOUND, {
+                    "ok": False,
+                    "error": f"Email '{raw_email}' chưa có trong danh sách đăng ký mua sách. Vui lòng kiểm tra lại chính xác địa chỉ Gmail đã cung cấp hoặc liên hệ Bác sĩ Phạm Ngọc Hà để được hỗ trợ."
+                })
+                return
+
+            # Cập nhật số điện thoại Telegram vào hồ sơ
+            members[found_email]["phone"] = clean_phone
+            members[found_email]["telegram_verified"] = True
+            _save_members(members)
+
+            mem_data = members[found_email]
+            allocated = _get_allocated_books_for_member(mem_data)
+
+            self._json(HTTPStatus.OK, {
+                "ok": True,
+                "email": found_email,
+                "name": mem_data.get("name", found_email.split("@")[0]),
+                "phone": clean_phone,
+                "books_count": len(allocated),
+                "books": allocated,
+                "bot_url": "https://t.me/Aivannang_bot"
+            })
+        except Exception as exc:
+            print(f"[Register Telegram Phone Error] {exc}", file=sys.stderr)
+            self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {
+                "ok": False,
+                "error": f"Lỗi hệ thống: {str(exc)}"
+            })
 
     def _handle_magic_login(self, token_or_email: str, phone: str = "", name: str = ""):
         if not token_or_email:
@@ -659,69 +880,39 @@ class DRMRequestHandler(BaseHTTPRequestHandler):
         clean_phone = phone.replace(" ", "").replace("-", "") if phone else ""
         clean_name = name.strip()
 
-        if not mem:
-            clean_str = token_or_email.strip().lower()
-            if "@" in clean_str and "." in clean_str:
-                # Tự động cấp phép mới và trao Full 8 quyển nếu Bác sĩ tự gõ email chưa có trong hệ thống
-                members = _load_members()
-                new_token = f"act_{uuid.uuid4().hex[:12]}"
-                mem = {
-                    "email": clean_str,
-                    "name": clean_name or clean_str.split("@")[0],
-                    "phone": clean_phone,
-                    "is_full_8": True,
-                    "allocated_books": ["all"],
-                    "telegram_verified": bool(clean_phone and len(clean_phone) >= 9),
-                    "access_token": new_token,
-                    "registered_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-                    "status": "active",
-                    "dispatched_books": {}
-                }
-                members[clean_str] = mem
-                _save_members(members)
-                email = clean_str
-                print(f"🌟 [Auto Register] Đã tự động cấp Full 8 quyển và tạo hồ sơ cho BS mới: {clean_str}")
-            else:
-                self._json(HTTPStatus.UNAUTHORIZED, {
-                    "ok": False,
-                    "error": f"Tài khoản hoặc liên kết '{token_or_email}' không hợp lệ. Vui lòng kiểm tra lại địa chỉ email."
-                })
-                return
-        else:
-            # Nếu đã có hồ sơ và có SĐT mới gửi lên -> cập nhật ngay vào members.json
-            if clean_phone and len(clean_phone) >= 9:
-                members = _load_members()
-                if email in members:
-                    members[email]["phone"] = clean_phone
-                    members[email]["telegram_verified"] = True
-                    if clean_name:
-                        members[email]["name"] = clean_name
-                    _save_members(members)
-                    mem["phone"] = clean_phone
-                    mem["telegram_verified"] = True
-                    if clean_name:
-                        mem["name"] = clean_name
+        # Nếu chưa tìm thấy theo identifier, thử tìm theo phone được gửi lên
+        if not mem and clean_phone and len(clean_phone) >= 9:
+            email, mem = _find_member_by_token_or_email(clean_phone)
 
-        # Đảm bảo 100% Bác sĩ truy cập qua Portal đều được kích hoạt Full 8 cuốn sách chuyên khảo
-        if not mem.get("is_full_8") or mem.get("allocated_books") != ["all"]:
+        if not mem:
+            self._json(HTTPStatus.UNAUTHORIZED, {
+                "ok": False,
+                "error": f"Thông tin '{token_or_email}' chưa có trong danh sách phân bổ sách của hệ thống. Vui lòng liên hệ Admin (BS Hà) để được hỗ trợ kích hoạt."
+            })
+            return
+
+        # Nếu đã có hồ sơ và có SĐT mới gửi lên -> cập nhật ngay vào members.json
+        if clean_phone and len(clean_phone) >= 9:
             members = _load_members()
             if email in members:
-                members[email]["is_full_8"] = True
-                members[email]["allocated_books"] = ["all"]
+                members[email]["phone"] = clean_phone
+                members[email]["telegram_verified"] = True
+                if clean_name and clean_name != "Bác sĩ":
+                    members[email]["name"] = clean_name
                 _save_members(members)
-            mem["is_full_8"] = True
-            mem["allocated_books"] = ["all"]
+                mem["phone"] = clean_phone
+                mem["telegram_verified"] = True
+                if clean_name and clean_name != "Bác sĩ":
+                    mem["name"] = clean_name
 
         user_name = clean_name or mem.get("name", "") or email.split("@")[0]
         final_phone = clean_phone or mem.get("phone", "")
         allocated_books = _get_allocated_books_for_member(mem)
 
-        # Nếu đã có số điện thoại Telegram hợp lệ, TỰ ĐỘNG ĐƯA TOÀN BỘ 8 QUYỂN VÀO HÀNG ĐỢI NGAY (KHÔNG CẦN CHỜ OTP)
+        # TUYỆT ĐỐI KHÔNG TỰ Ý ĐẨY SÁCH VÀO HÀNG ĐỢI KHI CHỈ MỚI LOGIN!
+        # Việc đẩy sách chỉ diễn ra khi người dùng chủ động bấm nhận sách.
         enqueued_tasks = []
-        is_verified = False
-        if final_phone and len(final_phone) >= 9:
-            is_verified = True
-            enqueued_tasks = enqueue_member_books(email, final_phone)
+        is_verified = bool(final_phone and len(final_phone) >= 9)
 
         session_token = uuid.uuid4().hex
         PORTAL_SESSIONS[session_token] = {
@@ -980,11 +1171,17 @@ class DRMRequestHandler(BaseHTTPRequestHandler):
         if email not in members:
             self._json(HTTPStatus.NOT_FOUND, {"ok": False, "error": f"Không tìm thấy Bác sĩ: {email}"})
             return
-        members[email]["phone"] = phone
+        if phone:
+            members[email]["phone"] = phone
+            members[email]["telegram_verified"] = True
+        if "allocated_books" in payload and isinstance(payload["allocated_books"], list):
+            members[email]["allocated_books"] = payload["allocated_books"]
+        if "is_full_8" in payload:
+            members[email]["is_full_8"] = bool(payload["is_full_8"])
         _save_members(members)
         self._json(HTTPStatus.OK, {
             "ok": True,
-            "message": f"Đã cập nhật số điện thoại thành công cho {email}: {phone}"
+            "message": f"Đã cập nhật thông tin thành công cho {email}"
         })
 
     def _handle_admin_dispatch_telegram(self):
